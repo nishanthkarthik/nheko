@@ -49,32 +49,11 @@ Column {
     Row {
         id: userInfo
 
-        property int remainingWidth: chat.delegateMaxWidth - spacing - messageUserAvatar.width
+        property int remainingWidth: chat.delegateMaxWidth - spacing
 
         height: userName_.height
         spacing: 8
         visible: !isStateEvent && (!isSender || !Settings.bubbles)
-
-        Avatar {
-            id: messageUserAvatar
-
-            ToolTip.delay: Nheko.tooltipDelay
-            ToolTip.text: userid
-            ToolTip.visible: messageUserAvatar.hovered
-            displayName: userName
-            height: Nheko.avatarSize * (Settings.smallAvatars ? 0.5 : 1)
-            url: !room ? "" : room.avatarUrl(userId).replace("mxc://", "image://MxcImage/")
-            userid: userId
-            width: Nheko.avatarSize * (Settings.smallAvatars ? 0.5 : 1)
-
-            onClicked: room.openUserProfile(userId)
-        }
-        Connections {
-            function onRoomAvatarUrlChanged() {
-                messageUserAvatar.url = room.avatarUrl(userId).replace("mxc://", "image://MxcImage/");
-            }
-            target: room
-        }
 
         AbstractButton {
             id: userNameButton
