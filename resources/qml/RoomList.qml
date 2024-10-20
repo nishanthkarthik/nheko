@@ -449,7 +449,7 @@ Page {
         //reuseItems: true
         ScrollBar.vertical: ScrollBar {
             id: scrollbar
-
+            anchors.right: parent.right
             parent: !collapsed && Settings.scrollbarsInRoomlist ? roomlist : null
         }
         delegate: ItemDelegate {
@@ -477,14 +477,13 @@ Page {
             ToolTip.delay: Nheko.tooltipDelay
             ToolTip.text: roomName
             ToolTip.visible: hovered && collapsed
-            height: avatarSize + 2 * Nheko.paddingMedium
             state: "normal"
             width: ListView.view.width - ((scrollbar.interactive && scrollbar.visible && scrollbar.parent) ? scrollbar.width : 0)
-
             topInset: 0
             bottomInset: 0
             leftInset: 0
             rightInset: 0
+            height: 28
 
             background: Rectangle {
                 color: backgroundColor
@@ -536,134 +535,50 @@ Page {
                 color: Qt.rgba(palette.dark.r, palette.dark.g, palette.dark.b, 0.5)
             }
 
-            // NOTE(Nico): We want to prevent the touch areas from overlapping. For some reason we need to add 1px of padding for that...
             Item {
+                id: titleRow
+
+                Layout.fillWidth: true
+                Layout.fillHeight: true
                 anchors.fill: parent
-                anchors.margins: 1
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: 4
+                anchors.rightMargin: 4
 
-                TapHandler {
-                    id: roomItemTh
+                ElidedLabel {
+                    id: titleText
+                    anchors.verticalCenter: parent.verticalCenter
 
-                    acceptedButtons: Qt.RightButton
-                    acceptedDevices: PointerDevice.Mouse | PointerDevice.Stylus | PointerDevice.TouchPad
-                    gesturePolicy: TapHandler.ReleaseWithinBounds
+                    anchors.left: parent.left
+                    color: roomItem.importantText
+                    elideWidth: parent.width - (timestamp.visible ? timestamp.implicitWidth : 0) - (spaceNotificationBubble.visible ? spaceNotificationBubble.implicitWidth : 0)
+                    fullText: TimelineManager.htmlEscape(roomName)
+                    textFormat: Text.RichText
+                }
+                Label {
+                    id: timestamp
+                    parent: titleRow
 
-                    onSingleTapped: {
-                        if (!TimelineManager.isInvite)
-                            roomContextMenu.show(roomItemTh, roomId, tags);
-                    }
+                    anchors.baseline: titleText.baseline
+                    anchors.right: parent.right
+                    color: roomItem.unimportantText
+                    font.pixelSize: fontMetrics.font.pixelSize * 0.9
+                    text: time
+                    visible: !isInvite && !isSpace
+                }
+                NotificationBubble {
+                    id: spaceNotificationBubble
+
+                    anchors.right: parent.right
+                    bubbleBackgroundColor: roomItem.bubbleBackground
+                    bubbleTextColor: roomItem.bubbleText
+                    hasLoudNotification: roomItem.hasLoudNotification
+                    mayBeVisible: !collapsed && (isSpace ? Settings.spaceNotifications : false)
+                    notificationCount: roomItem.notificationCount
+                    parent: titleRow
                 }
             }
-            RowLayout {
-                anchors.fill: parent
-                anchors.margins: Nheko.paddingMedium
-                spacing: Nheko.paddingMedium
 
-                Avatar {
-                    id: avatar
-
-                    Layout.alignment: Qt.AlignVCenter
-                    displayName: roomName
-                    enabled: false
-                    roomid: roomId
-                    url: avatarUrl.replace("mxc://", "image://MxcImage/")
-                    userid: isDirect ? directChatOtherUserId : ""
-                    Layout.preferredWidth: avatarSize
-                    Layout.preferredHeight: avatarSize
-
-                    NotificationBubble {
-                        id: collapsedNotificationBubble
-
-                        anchors.bottom: parent.bottom
-                        anchors.margins: -Nheko.paddingSmall
-                        anchors.right: parent.right
-                        bubbleBackgroundColor: roomItem.bubbleBackground
-                        bubbleTextColor: roomItem.bubbleText
-                        hasLoudNotification: roomItem.hasLoudNotification
-                        mayBeVisible: collapsed && (isSpace ? Settings.spaceNotifications : true)
-                        notificationCount: roomItem.notificationCount
-                    }
-                }
-                ColumnLayout {
-                    id: textContent
-
-                    Layout.alignment: Qt.AlignLeft
-                    Layout.minimumWidth: 100
-                    Layout.preferredWidth: roomItem.width - avatar.width
-                    Layout.preferredHeight: avatar.height
-                    spacing: Nheko.paddingSmall
-                    visible: !collapsed
-
-                    Item {
-                        id: titleRow
-
-                        Layout.alignment: Qt.AlignTop
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: subtitleText.implicitHeight
-
-                        ElidedLabel {
-                            id: titleText
-
-                            anchors.left: parent.left
-                            color: roomItem.importantText
-                            elideWidth: parent.width - (timestamp.visible ? timestamp.implicitWidth : 0) - (spaceNotificationBubble.visible ? spaceNotificationBubble.implicitWidth : 0)
-                            fullText: TimelineManager.htmlEscape(roomName)
-                            textFormat: Text.RichText
-                        }
-                        Label {
-                            id: timestamp
-
-                            anchors.baseline: titleText.baseline
-                            anchors.right: parent.right
-                            color: roomItem.unimportantText
-                            font.pixelSize: fontMetrics.font.pixelSize * 0.9
-                            text: time
-                            visible: !isInvite && !isSpace
-                        }
-                        NotificationBubble {
-                            id: spaceNotificationBubble
-
-                            anchors.right: parent.right
-                            bubbleBackgroundColor: roomItem.bubbleBackground
-                            bubbleTextColor: roomItem.bubbleText
-                            hasLoudNotification: roomItem.hasLoudNotification
-                            mayBeVisible: !collapsed && (isSpace ? Settings.spaceNotifications : false)
-                            notificationCount: roomItem.notificationCount
-                            parent: isSpace ? titleRow : subtextRow
-                        }
-                    }
-                    Item {
-                        id: subtextRow
-
-                        Layout.alignment: Qt.AlignBottom
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: subtitleText.implicitHeight
-                        visible: !isSpace
-
-                        ElidedLabel {
-                            id: subtitleText
-
-                            anchors.left: parent.left
-                            color: roomItem.unimportantText
-                            elideWidth: subtextRow.width - (subtextNotificationBubble.visible ? subtextNotificationBubble.implicitWidth : 0)
-                            font.pixelSize: fontMetrics.font.pixelSize * 0.9
-                            fullText: TimelineManager.htmlEscape(lastMessage)
-                            textFormat: Text.RichText
-                        }
-                        NotificationBubble {
-                            id: subtextNotificationBubble
-
-                            anchors.baseline: subtitleText.baseline
-                            anchors.right: parent.right
-                            bubbleBackgroundColor: roomItem.bubbleBackground
-                            bubbleTextColor: roomItem.bubbleText
-                            hasLoudNotification: roomItem.hasLoudNotification
-                            mayBeVisible: !collapsed
-                            notificationCount: roomItem.notificationCount
-                        }
-                    }
-                }
-            }
             Rectangle {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
