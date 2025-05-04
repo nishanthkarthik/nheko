@@ -71,7 +71,7 @@ Column {
                 sourceSize.height: height
 
                 permissions: room ? room.permissions : null
-                visible: isAdmin || isModerator
+                visible: false
             }
 
             ToolTip.delay: Nheko.tooltipDelay
