@@ -52,6 +52,10 @@ AbstractButton {
     Image {
         id: img
 
+        mipmap: true
+        antialiasing: true
+        smooth: true
+
         anchors.fill: parent
         asynchronous: true
         fillMode: avatar.crop ? Image.PreserveAspectCrop : Image.PreserveAspectFit
